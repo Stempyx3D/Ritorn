@@ -1,2 +1,2 @@
-# Tunibo
-Tunibo - a fast, offline-first, cross-platform music player.
+# Ritorn
+Ritorn - a fast, offline-first, cross-platform music player.
