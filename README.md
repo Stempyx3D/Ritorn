@@ -1,8 +1,8 @@
-# Tunibo
+# Ritorn
 
-Tunibo is an offline-first, cross-platform music player for locally stored audio files, with optional synchronization of playlists and metadata between a user's devices.
+Ritorn is an offline-first, cross-platform music player for locally stored audio files, with optional synchronization of playlists and metadata between a user's devices.
 
-> Status: pre-implementation / proof-of-concept planning. The underlying specifications date from November 13-14, 2026 and use the earlier working name "Music Player". Those original documents are preserved unchanged. Reconcile subsequent project decisions before treating them as implementation-ready.
+> Status: pre-implementation / proof-of-concept planning. The underlying specifications date from November 13-14, 2026 and use the earlier working name "Music Player". The versioned documents retain their historical titles and technical detail, with targeted alignment recorded in [DECISIONS.md](docs/DECISIONS.md). Product invariants are approved; technical choices still require review and PoC.
 
 ## Target platforms
 
@@ -26,6 +26,7 @@ Tunibo is an offline-first, cross-platform music player for locally stored audio
 
 ## Specifications
 
+- [Decision register and approval status](docs/DECISIONS.md)
 - [Product requirements](docs/Music_Player_PRD_v1.0.md)
 - [Architecture](docs/ARCHITECTURE_v1.0.md)
 - [Data model](docs/DATA_MODEL_v1.0.md)
@@ -35,9 +36,9 @@ These documents contain a mixture of approved product invariants and proposed te
 
 ## Next steps
 
-1. Review and reconcile the latest decisions from other discussions; update documentation in a dedicated commit.
+1. Resolve the open product policies in the decision register and validate technical candidates through PoC.
 2. Generate a current Kotlin Multiplatform project with the official tooling rather than hand-writing Gradle scaffolding.
-3. Build a Windows audio-engine proof of concept, benchmark it, then test Android and iOS early.
+3. Build a Windows audio-engine proof of concept, benchmark it, then test Android and iOS early; incorporate local listening-history collection at the playback stage.
 4. Introduce database, sync and end-to-end test prototypes before main development.
 
 ## Repository workflow

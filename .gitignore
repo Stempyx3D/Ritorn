@@ -51,3 +51,13 @@ media-library/
 *.wav
 *.ogg
 *.opus
+
+# Only direct children of this curated fixture directory may be versioned.
+# Keep files small and legally distributable; document provenance/license.
+!/tests/fixtures/audio/*.mp3
+!/tests/fixtures/audio/*.flac
+!/tests/fixtures/audio/*.m4a
+!/tests/fixtures/audio/*.aac
+!/tests/fixtures/audio/*.wav
+!/tests/fixtures/audio/*.ogg
+!/tests/fixtures/audio/*.opus

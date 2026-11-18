@@ -1,5 +1,7 @@
 # Music Player — SYNC_SPEC v1.0
 
+> **Узгодження 18.11.2026:** поточна назва — Ritorn; історичні заголовки та назви файлів збережено. Статуси й джерела рішень — у [DECISIONS.md](DECISIONS.md). P0/P1 означають пріоритет, не затвердження технології. Стек і контракти залишаються пропозиціями до рев’ю/PoC.
+
 **Дата:** 14 листопада 2026  
 **Статус:** проєкт технічної специфікації для рев'ю; не реалізовано й не протестовано на Supabase  
 **Вхідні документи:** `Music_Player_PRD_v1.0.md`, `ARCHITECTURE_v1.0.md`, `DATA_MODEL_v1.0.md`  
@@ -39,7 +41,13 @@
 
 **Не обіцяємо:** миттєвий стан на всіх пристроях, доставку Realtime «рівно один раз», відсутність конфліктів чи автоматичне відновлення після видалення з резервної копії.
 
-## 2. Затверджені бізнес-інваріанти
+### 1.3 Локальна історія поза sync-протоколом
+
+STAT-01 погоджує ранній локальний збір історії, а не її синхронізацію. `playback_sessions` та можливі `playback_events`, listening duration і похідні метрики залишаються лише на пристрої. Не включати їх до серверного journal, `synced_tracks`, payload команд, snapshot чи `sync_outbox` без окремого погодженого продуктового рішення й рев’ю протоколу/приватності. Collector працює без Supabase та Auth. Технічні метрики sync у §17 не є історією прослуховувань.
+
+## 2. Бізнес-інваріанти та запропоновані уточнення
+
+Затверджені SYNC-01/02, TRACK-03/04 та інші явно підтверджені продуктові рішення перелічені в [DECISIONS.md](DECISIONS.md). Пов’язані вимоги PRD збережено; конкретна обробка кошика, версій і команд нижче не отримує статус Approved лише від включення в цей розділ.
 
 1. **SYNC-01:** видалення композиції з останнього синхронізованого плейлиста не змінює `synced_tracks.catalog_active`. Лише явна команда вимкнення синхронізації змінює членство в каталозі.
 2. **SYNC-02:** звичайне `disable_track_sync` можливе тільки без активних входжень композиції в невидалені синхронізовані плейлисти. Якщо такі входження є, користувач бачить перелік і може обрати **переглянути**, **видалити з усіх і вимкнути**, **скасувати**. Уся зміна застосовується атомарно лише після серверної перевірки актуальних залежностей.
@@ -368,7 +376,7 @@ return result
 2. `read_snapshot_chunk(snapshot_id, page_token)`: повертає **незмінний** chunk під авторизацією власника; порядок детермінований (entity type + UUID), page_token не є вільним SQL-фільтром.
 3. Клієнт записує chunks в **окрему локальну staging-область**, перевіряє schema/version, кількість і checksum. Поточна confirmed replica ще не змінюється.
 4. Перед переключенням snapshot перевіряє відомі `operation_id` через авторизований `get_operation_results(operation_ids)` або повтор того самого ідемпотентного RPC, щоб з'ясувати, які outbox-команди сервер уже застосував до `S`. Не можна робити висновок про ACK лише зі схожості стану записів.
-5. В одній SQLite-транзакції замінює confirmed cloud replica snapshot-даними, встановлює `last_applied_seq = S`, позначає перевірені підтверджені локальні команди і **зберігає всі решта pending intents** для rebase. Локальні `AudioFile`, `TrackLink`, guest-playlists і playback state не торкаються.
+5. В одній SQLite-транзакції замінює confirmed cloud replica snapshot-даними, встановлює `last_applied_seq = S`, позначає перевірені підтверджені локальні команди і **зберігає всі решта pending intents** для rebase. Локальні `AudioFile`, `TrackLink`, guest-playlists, playback state та локальну історію/статистику прослуховувань не торкаються.
 6. Будує optimistic projection; якщо intent конфліктує зі snapshot, переводить у `needs_review` без втрати його payload.
 7. Виконує `pull_changes(after_seq=S)` для подій, що закомітилися після snapshot, потім retry/push решти команд у безпечному порядку.
 8. Якщо snapshot token прострочений або staging пошкоджений — почати новий snapshot; **не** скидати outbox.
@@ -490,6 +498,7 @@ visible_sync_state = apply_pending_intents(
 | SY-T28 | Помилка artwork upload | Playlist і metadata sync не блокуються |
 | SY-T29 | Unsupported schema/version | Команда відхилена без часткового commit |
 | SY-T30 | Тривала офлайн-робота і десятки локальних edits | Після відновлення — reconciliation або явні конфлікти, не втрата даних |
+| SY-T31 | Локальна історія під час sync та snapshot/reconciliation | Історія не передається в catalog/journal/outbox і не стирається заміною sync replica; STAT-AC-06 |
 
 Тести мають бути **інтеграційними з реальною тестовою PostgreSQL/Supabase**, а не лише моками. Потрібні також `anon`/`authenticated` RLS/GRANT тести, property-based/state-machine тести outbox і fault-injection (timeout, crash, duplicate, reorder).
 
@@ -522,7 +531,7 @@ visible_sync_state = apply_pending_intents(
 
 ### Послідовність реалізації після погодження документа
 
-1. Узгодити невеликі зміни DATA_MODEL (revisions, snapshot staging, confirmed/pending проєкції) і створити **версіоновані** міграції в майбутньому репозиторії.
+1. Узгодити невеликі зміни DATA_MODEL (revisions, snapshot staging, confirmed/pending проєкції) і створити **версіоновані** міграції в цьому репозиторії на наступному етапі, після погодження.
 2. Побудувати server RPC + RLS/GRANT тести, інваріанти SYNC-01/02, account-lock, журнал та idempotency.
 3. Побудувати SQLite outbox + pull / reconciliation; fault-injection тести мережі й crash.
 4. Реалізувати snapshot fallback і ретеншн тільки після перевірки відновлення.

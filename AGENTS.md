@@ -1,11 +1,13 @@
-# Tunibo — Repository Agent Instructions
+# Ritorn — Repository Agent Instructions
 
 ## Scope and status
 - This is an offline-first local music player. MVP platforms: Windows, Android, iOS. macOS is deferred.
 - The project is in design/PoC stage. Do not assume an app, database schema, Gradle structure or working tests already exist.
-- Read relevant files in `docs/` before modifying implementation or data contracts.
+- Read relevant files in `docs/` and `docs/DECISIONS.md` before changes affecting architecture, data contracts or product behavior.
+- Distinguish `Approved`, `Proposed`, `Needs PoC`, `Deferred` and `Superseded` as defined in the register. Never silently promote proposals or PoC results to approved decisions.
+- Report conflicts between specifications and the decision register; never invent missing product requirements.
 - Distinguish **approved product invariants** from **proposed technical designs**; do not silently treat proposals as final approvals.
-- The original specification files in `docs/` retain the earlier working name "Music Player". Do not silently rewrite them or claim that they already reflect all later decisions.
+- The original specification files in `docs/` retain the earlier working name "Music Player". Preserve their requirement IDs and technical detail; consult the decision register for targeted alignment and remaining open decisions.
 
 ## Product invariants
 - Audio playback and local playlists must not depend on a network or sign-in.
@@ -29,4 +31,4 @@
 ## Safety and Git
 - Never commit credentials, access tokens, signing keys, local `.env` files, or user music.
 - Never run destructive database migrations, delete production data, change access policies in production, push, publish or deploy without explicit authorization.
-- Prefer small, reviewable commits; do not overwrite unrelated user changes.
+- Keep changes small, testable and reviewable; do not overwrite unrelated user changes.
